@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Repository:repository xmlns:Repository="http://www.tibco.com/xmlns/repo/types/2002">
+    <enterpriseArchive>
+        <sharedArchive name="Shared Archive">
+            <resourceType>shared.archive.resource</resourceType>
+            <authorProperty>GoForNik</authorProperty>
+        </sharedArchive>
+        <processArchive name="Process Archive">
+            <resourceType>process.archive.resource</resourceType>
+            <authorProperty>GoForNik</authorProperty>
+            <processProperty>/EnterpriseResources/HttpHandler/EndpointReciever/EndpointHandler.process,/ProjectLibrary/EnterpriseResources/Processes/Java/SetAuthData.process,/ProjectLibrary/EnterpriseResources/Processes/Java/setMedURI.process,/ProjectLibrary/EnterpriseResources/Processes/Java/setResolverURI.process,/ProjectLibrary/EnterpriseResources/JavaResources/Auth_globalInstance.serviceagent,/ProjectLibrary/EnterpriseResources/JavaResources/MedUriGlobalInstance.serviceagent,/ProjectLibrary/EnterpriseResources/JavaResources/Resolver_GlobalInstance.serviceagent,/ProjectLibrary/EnterpriseResources/Processes/Logger/AuditLogger.process,/ProjectLibrary/EnterpriseResources/Processes/Logger/FaultLogger.process</processProperty>
+        </processArchive>
+        <versionProperty>15</versionProperty>
+        <authorProperty>GoForNik</authorProperty>
+        <addServiceSettableGvars>true</addServiceSettableGvars>
+        <name>Mediation</name>
+        <designer>
+            <lockedProperties/>
+            <fixedChildren/>
+            <resourceDescriptions/>
+        </designer>
+        <fileLocationProperty>C:\Users\GoForNik\Desktop\Work\TIBCO\BW\EAR\Mediation.ear</fileLocationProperty>
+    </enterpriseArchive>
+</Repository:repository>

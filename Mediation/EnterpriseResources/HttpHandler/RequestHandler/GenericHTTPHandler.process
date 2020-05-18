@@ -1,0 +1,853 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pd:ProcessDefinition xmlns:ns2="http://www.tibco.com/pe/DeployedVarsType" xmlns:pd="http://xmlns.tibco.com/bw/process/2003" xmlns:ns1="http://www.tibco.com/namespaces/tnt/plugins/jms" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:ns4="http://www.tibco.com/pe/EngineTypes" xmlns:ns="www.tibco.com/plugin/java/JavaMethodActivityInput" xmlns:ns3="www.tibco.com/plugin/java/JavaMethodActivityOutput" xmlns:ProjectCustom="java://ProjectData.GeneralFunction" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:UUID="java://ProjectData.GenerateUUID" xmlns:tib="http://www.tibco.com/bw/xslt/custom-functions" xmlns:pfx3="http://www.tibco.com/pe/GenerateErrorActivity/InputSchema" xmlns:pfx2="http://www.tibco.com/schemas/LibraryBuilder/ProjectLibrary/EnterpriseResources/Schemas/Header/HeaderFault.xsd" xmlns:ns5="http://www.tibco.com/schemas/LibraryBuilder/ProjectLibrary/EnterpriseResources/Schemas/DBLog/Schema.xsd" xmlns:pfx="http://schemas.xmlsoap.org/soap/envelope/">
+    <xsd:import namespace="http://www.tibco.com/schemas/LibraryBuilder/ProjectLibrary/EnterpriseResources/Schemas/Header/HeaderFault.xsd" schemaLocation="/ProjectLibrary/EnterpriseResources/Schemas/Header/HeaderFault.xsd"/>
+    <xsd:import namespace="http://schemas.xmlsoap.org/soap/envelope/" schemaLocation="/EnterpriseResources/SharedResource/XSD/Soap.xsd"/>
+    <pd:name>EnterpriseResources/HttpHandler/RequestHandler/GenericHTTPHandler.process</pd:name>
+    <pd:startName>Start</pd:startName>
+    <pd:startType>
+        <xsd:element name="HTTPRequest">
+            <xsd:complexType>
+                <xsd:sequence>
+                    <xsd:element name="PostData" type="xsd:string"/>
+                    <xsd:element name="Soapaction" type="xsd:string"/>
+                </xsd:sequence>
+            </xsd:complexType>
+        </xsd:element>
+    </pd:startType>
+    <pd:startX>204</pd:startX>
+    <pd:startY>281</pd:startY>
+    <pd:returnBindings>
+        <HTTPResponse>
+            <xsl:choose>
+                <xsl:when test="upper-case($GetResolver/ns3:JavaMethodActivityOutput/MethodReturnValue)=&quot;NO&quot;">
+                    <sendHTTPData>
+                        <xsl:value-of select="$JMSDispatcher/JMSOutput/Response"/>
+                    </sendHTTPData>
+                </xsl:when>
+                <xsl:otherwise>
+                    <sendHTTPData>
+                        <xsl:value-of select="$ResponseResolver/root/Target"/>
+                    </sendHTTPData>
+                </xsl:otherwise>
+            </xsl:choose>
+        </HTTPResponse>
+    </pd:returnBindings>
+    <pd:endName>End</pd:endName>
+    <pd:endType>
+        <xsd:element name="HTTPResponse">
+            <xsd:complexType>
+                <xsd:sequence>
+                    <xsd:element name="sendHTTPData" type="xsd:string"/>
+                </xsd:sequence>
+            </xsd:complexType>
+        </xsd:element>
+    </pd:endType>
+    <pd:endX>1444</pd:endX>
+    <pd:endY>35</pd:endY>
+    <pd:errorSchemas>
+        <ErrSchema ref="pfx2:Fault"/>
+    </pd:errorSchemas>
+    <pd:processVariables>
+        <Generic>
+            <xsd:element name="HeaderExtra">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="UniqueID" type="xsd:string"/>
+                        <xsd:element name="TimeStamp" type="xsd:string"/>
+                        <xsd:element name="SoapAction" type="xsd:string"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+        </Generic>
+    </pd:processVariables>
+    <pd:targetNamespace>http://xmlns.example.com/1469548860473</pd:targetNamespace>
+    <pd:activity name="Assign">
+        <pd:type>com.tibco.pe.core.AssignActivity</pd:type>
+        <pd:resourceType>ae.activities.assignActivity</pd:resourceType>
+        <pd:x>53</pd:x>
+        <pd:y>280</pd:y>
+        <config>
+            <variableName>Generic</variableName>
+        </config>
+        <pd:inputBindings>
+            <HeaderExtra>
+                <UniqueID>
+                    <xsl:value-of select="UUID:GenerateUniqueKeys()"/>
+                </UniqueID>
+                <TimeStamp>
+                    <xsl:value-of select="current-dateTime()"/>
+                </TimeStamp>
+                <SoapAction>
+                    <xsl:value-of select="concat(substring-before($Start/HTTPRequest/Soapaction, 'OPHTTPEndpoint'),'OPJMSEndpoint',substring-after($Start/HTTPRequest/Soapaction, 'OPHTTPEndpoint'))"/>
+                </SoapAction>
+            </HeaderExtra>
+        </pd:inputBindings>
+    </pd:activity>
+    <pd:activity name="RequestMessage">
+        <pd:type>com.tibco.plugin.xml.XMLRendererActivity</pd:type>
+        <pd:resourceType>ae.activities.XMLRendererActivity</pd:resourceType>
+        <pd:x>646</pd:x>
+        <pd:y>35</pd:y>
+        <config>
+            <renderAsText>text</renderAsText>
+            <validateInput>true</validateInput>
+            <textEncoding>UTF-8</textEncoding>
+            <term ref="pfx:Envelope"/>
+        </config>
+        <pd:inputBindings>
+            <pfx:Envelope>
+                <pfx:Header>
+                    <xsl:copy-of select="$newHeader/pfx2:RqHeader"/>
+                </pfx:Header>
+                <xsl:copy-of select="$ParseHTTPPostData/pfx:Envelope/pfx:Body"/>
+            </pfx:Envelope>
+        </pd:inputBindings>
+    </pd:activity>
+    <pd:activity name="newHeader">
+        <pd:type>com.tibco.plugin.mapper.MapperActivity</pd:type>
+        <pd:resourceType>ae.activities.MapperActivity</pd:resourceType>
+        <pd:x>180</pd:x>
+        <pd:y>35</pd:y>
+        <config>
+            <element ref="pfx2:RqHeader"/>
+        </config>
+        <pd:coercions>
+            <pd:coercion xpath="$ParseHTTPPostData/pfx:Envelope/pfx:Header/*" element="pfx2:RqHeader"/>
+        </pd:coercions>
+        <pd:inputBindings>
+            <xsl:for-each select="$ParseHTTPPostData/pfx:Envelope/pfx:Header/pfx2:RqHeader[1]">
+                <pfx2:RqHeader>
+                    <pfx2:TimeStamp>
+                        <xsl:value-of select="$Generic/HeaderExtra/TimeStamp"/>
+                    </pfx2:TimeStamp>
+                    <pfx2:UniqueID>
+                        <xsl:value-of select="$Generic/HeaderExtra/UniqueID"/>
+                    </pfx2:UniqueID>
+                    <pfx2:CountryCode>
+                        <xsl:value-of select="pfx2:CountryCode"/>
+                    </pfx2:CountryCode>
+                    <pfx2:UserID>
+                        <xsl:value-of select="pfx2:UserID"/>
+                    </pfx2:UserID>
+                    <pfx2:Channel>
+                        <xsl:value-of select="pfx2:Channel"/>
+                    </pfx2:Channel>
+                    <xsl:if test="pfx2:version">
+                        <pfx2:version>
+                            <xsl:value-of select="pfx2:version"/>
+                        </pfx2:version>
+                    </xsl:if>
+                </pfx2:RqHeader>
+            </xsl:for-each>
+        </pd:inputBindings>
+    </pd:activity>
+    <pd:activity name="ParseHTTPPostData">
+        <pd:type>com.tibco.plugin.xml.XMLParseActivity</pd:type>
+        <pd:resourceType>ae.activities.XMLParseActivity</pd:resourceType>
+        <pd:x>64</pd:x>
+        <pd:y>35</pd:y>
+        <config>
+            <inputStyle>text</inputStyle>
+            <xsdVersion>default</xsdVersion>
+            <validateOutput>true</validateOutput>
+            <term ref="pfx:Envelope"/>
+        </config>
+        <pd:inputBindings>
+            <xmlString>
+                <xsl:value-of select="$Start/HTTPRequest/PostData"/>
+            </xmlString>
+        </pd:inputBindings>
+    </pd:activity>
+    <pd:activity name="GetRequestQueue">
+        <pd:type>com.tibco.plugin.java.JavaMethodActivity</pd:type>
+        <pd:resourceType>ae.activities.JavaMethodActivity</pd:resourceType>
+        <pd:x>476</pd:x>
+        <pd:y>35</pd:y>
+        <config>
+            <ConstructDeclaredClass>false</ConstructDeclaredClass>
+            <CacheConstructedClass>false</CacheConstructedClass>
+            <InvokeCleanupMethod>false</InvokeCleanupMethod>
+            <MethodInfo>
+                <classLocation>c:/tibco/bw/5.11/lib/projectdata.jar</classLocation>
+                <className>ProjectData.Local_MedURIInfo</className>
+                <methodName>getRequestQueue</methodName>
+                <methodReturn>java.lang.String</methodReturn>
+                <methodParameter>java.lang.String</methodParameter>
+                <methodParameter>java.lang.String</methodParameter>
+                <methodParameter>java.lang.String</methodParameter>
+            </MethodInfo>
+        </config>
+        <pd:inputBindings>
+            <ns:JavaMethodActivityInput>
+                <MethodParameters>
+                    <Parameter1>
+                        <xsl:value-of select="upper-case($newHeader/pfx2:RqHeader/pfx2:CountryCode)"/>
+                    </Parameter1>
+                    <Parameter2>
+                        <xsl:value-of select="upper-case($_globalVariables/ns2:GlobalVariables/Environment)"/>
+                    </Parameter2>
+                    <Parameter3>
+                        <xsl:value-of select="$Start/HTTPRequest/Soapaction"/>
+                    </Parameter3>
+                </MethodParameters>
+            </ns:JavaMethodActivityInput>
+        </pd:inputBindings>
+    </pd:activity>
+    <pd:activity name="Authorization">
+        <pd:type>com.tibco.plugin.java.JavaMethodActivity</pd:type>
+        <pd:resourceType>ae.activities.JavaMethodActivity</pd:resourceType>
+        <pd:x>290</pd:x>
+        <pd:y>35</pd:y>
+        <config>
+            <ConstructDeclaredClass>false</ConstructDeclaredClass>
+            <CacheConstructedClass>false</CacheConstructedClass>
+            <InvokeCleanupMethod>false</InvokeCleanupMethod>
+            <MethodInfo>
+                <classLocation>c:/tibco/bw/5.11/lib/projectdata.jar</classLocation>
+                <className>ProjectData.Local_AuthInfo</className>
+                <methodName>getAuthorizationDB</methodName>
+                <methodReturn>java.lang.String</methodReturn>
+                <methodParameter>java.lang.String</methodParameter>
+                <methodParameter>java.lang.String</methodParameter>
+                <methodParameter>java.lang.String</methodParameter>
+            </MethodInfo>
+        </config>
+        <pd:inputBindings>
+            <ns:JavaMethodActivityInput>
+                <MethodParameters>
+                    <Parameter1>
+                        <xsl:value-of select="upper-case($newHeader/pfx2:RqHeader/pfx2:CountryCode)"/>
+                    </Parameter1>
+                    <Parameter2>
+                        <xsl:value-of select="lower-case(upper-case($newHeader/pfx2:RqHeader/pfx2:UserID))"/>
+                    </Parameter2>
+                    <Parameter3>
+                        <xsl:value-of select="upper-case($newHeader/pfx2:RqHeader/pfx2:Channel)"/>
+                    </Parameter3>
+                </MethodParameters>
+            </ns:JavaMethodActivityInput>
+        </pd:inputBindings>
+    </pd:activity>
+    <pd:activity name="JMSDispatcher">
+        <pd:type>com.tibco.pe.core.CallProcessActivity</pd:type>
+        <pd:resourceType>ae.process.subprocess</pd:resourceType>
+        <pd:x>1040</pd:x>
+        <pd:y>35</pd:y>
+        <config>
+            <processName>/EnterpriseResources/HttpHandler/Dispatcher/JMSDispatcher.process</processName>
+        </config>
+        <pd:inputBindings>
+            <xsl:variable name="var" select="ProjectCustom:getTargetSoap($Start/HTTPRequest/Soapaction)"/>
+            <xsl:choose>
+                <xsl:when test="upper-case($GetResolver/ns3:JavaMethodActivityOutput/MethodReturnValue)=&quot;NO&quot;">
+                    <JMSParameter>
+                        <RequestQueue>
+                            <xsl:value-of select="$GetRequestQueue/ns3:JavaMethodActivityOutput/MethodReturnValue"/>
+                        </RequestQueue>
+                        <Body>
+                            <xsl:value-of select="$RequestMessage/xmlString"/>
+                        </Body>
+                        <SoapAction>
+                            <xsl:value-of select="$Generic/HeaderExtra/SoapAction"/>
+                        </SoapAction>
+                    </JMSParameter>
+                </xsl:when>
+                <xsl:otherwise>
+                    <JMSParameter>
+                        <RequestQueue>
+                            <xsl:value-of select="$GetRequestQueue/ns3:JavaMethodActivityOutput/MethodReturnValue"/>
+                        </RequestQueue>
+                        <Body>
+                            <xsl:value-of select="$RequestMessageResolver/xmlString"/>
+                        </Body>
+                        <SoapAction>
+                            <xsl:value-of select="concat(substring-before($var, 'OPHTTPEndpoint'),'OPJMSEndpoint',substring-after($var, 'OPHTTPEndpoint'))"/>
+                        </SoapAction>
+                    </JMSParameter>
+                </xsl:otherwise>
+            </xsl:choose>
+        </pd:inputBindings>
+    </pd:activity>
+    <pd:activity name="AuthGenerateError">
+        <pd:type>com.tibco.pe.core.GenerateErrorActivity</pd:type>
+        <pd:resourceType>ae.activities.throw</pd:resourceType>
+        <pd:x>290</pd:x>
+        <pd:y>186</pd:y>
+        <config>
+            <faultName>ErrSchema</faultName>
+        </config>
+        <pd:inputBindings>
+            <pfx3:ActivityInput>
+                <data>
+                    <xsl:choose>
+                        <xsl:when test="exists($_error/ns4:ErrorReport)">
+                            <pfx2:Fault>
+                                <pfx2:type>
+                                    <xsl:value-of select="'Authentication'"/>
+                                </pfx2:type>
+                                <pfx2:Code>
+                                    <xsl:value-of select="'Auth-110'"/>
+                                </pfx2:Code>
+                                <pfx2:Detail>
+                                    <xsl:value-of select="tib:render-xml($_error/ns4:ErrorReport)"/>
+                                </pfx2:Detail>
+                                <pfx2:MoreDetail>
+                                    <pfx2:Name>
+                                        <xsl:value-of select="'Process Stack'"/>
+                                    </pfx2:Name>
+                                    <pfx2:Value>
+                                        <xsl:value-of select="$_error/ns4:ErrorReport/ProcessStack"/>
+                                    </pfx2:Value>
+                                </pfx2:MoreDetail>
+                            </pfx2:Fault>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <pfx2:Fault>
+                                <pfx2:type>
+                                    <xsl:value-of select="'Authentication'"/>
+                                </pfx2:type>
+                                <pfx2:Code>
+                                    <xsl:value-of select="'Auth-110'"/>
+                                </pfx2:Code>
+                                <pfx2:Detail>
+                                    <xsl:value-of select="tib:render-xml($newHeader/pfx2:RqHeader)"/>
+                                </pfx2:Detail>
+                                <pfx2:MoreDetail>
+                                    <pfx2:Name>
+                                        <xsl:value-of select="'Authorization'"/>
+                                    </pfx2:Name>
+                                    <pfx2:Value>
+                                        <xsl:value-of select="$Authorization/ns3:JavaMethodActivityOutput/MethodReturnValue"/>
+                                    </pfx2:Value>
+                                </pfx2:MoreDetail>
+                            </pfx2:Fault>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </data>
+            </pfx3:ActivityInput>
+        </pd:inputBindings>
+    </pd:activity>
+    <pd:activity name="Null">
+        <pd:type>com.tibco.plugin.timer.NullActivity</pd:type>
+        <pd:resourceType>ae.activities.null</pd:resourceType>
+        <pd:x>379</pd:x>
+        <pd:y>125</pd:y>
+        <config/>
+        <pd:inputBindings/>
+    </pd:activity>
+    <pd:activity name="DestNotFound">
+        <pd:type>com.tibco.pe.core.GenerateErrorActivity</pd:type>
+        <pd:resourceType>ae.activities.throw</pd:resourceType>
+        <pd:x>478</pd:x>
+        <pd:y>170</pd:y>
+        <config>
+            <faultName>ErrSchema</faultName>
+        </config>
+        <pd:inputBindings>
+            <pfx3:ActivityInput>
+                <data>
+                    <xsl:choose xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+                        <xsl:when test="exists($_error/ns4:ErrorReport)">
+                            <pfx2:Fault>
+                                <pfx2:type>
+                                    <xsl:value-of select="'QueueNotFound'"/>
+                                </pfx2:type>
+                                <pfx2:Code>
+                                    <xsl:value-of select="'DEST-110'"/>
+                                </pfx2:Code>
+                                <pfx2:Detail>
+                                    <xsl:value-of select="tib:render-xml($_error/ns4:ErrorReport)"/>
+                                </pfx2:Detail>
+                                <pfx2:MoreDetail>
+                                    <pfx2:Name>
+                                        <xsl:value-of select="'Process Stack'"/>
+                                    </pfx2:Name>
+                                    <pfx2:Value>
+                                        <xsl:value-of select="$_error/ns4:ErrorReport/ProcessStack"/>
+                                    </pfx2:Value>
+                                </pfx2:MoreDetail>
+                            </pfx2:Fault>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <pfx2:Fault>
+                                <pfx2:type>
+                                    <xsl:value-of select="'QueueNotFound'"/>
+                                </pfx2:type>
+                                <pfx2:Code>
+                                    <xsl:value-of select="'DEST-110'"/>
+                                </pfx2:Code>
+                                <pfx2:Detail>
+                                    <xsl:value-of select="tib:render-xml($newHeader/pfx2:RqHeader)"/>
+                                </pfx2:Detail>
+                                <pfx2:MoreDetail>
+                                    <pfx2:Name>
+                                        <xsl:value-of select="'Destination'"/>
+                                    </pfx2:Name>
+                                    <pfx2:Value>
+                                        <xsl:value-of select="$GetRequestQueue/ns3:JavaMethodActivityOutput/MethodReturnValue"/>
+                                    </pfx2:Value>
+                                </pfx2:MoreDetail>
+                            </pfx2:Fault>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </data>
+            </pfx3:ActivityInput>
+        </pd:inputBindings>
+    </pd:activity>
+    <pd:activity name="Null-1">
+        <pd:type>com.tibco.plugin.timer.NullActivity</pd:type>
+        <pd:resourceType>ae.activities.null</pd:resourceType>
+        <pd:x>575</pd:x>
+        <pd:y>134</pd:y>
+        <config/>
+        <pd:inputBindings/>
+    </pd:activity>
+    <pd:activity name="AuthGenerateError-1">
+        <pd:type>com.tibco.pe.core.GenerateErrorActivity</pd:type>
+        <pd:resourceType>ae.activities.throw</pd:resourceType>
+        <pd:x>1043</pd:x>
+        <pd:y>165</pd:y>
+        <config>
+            <faultName>ErrSchema</faultName>
+        </config>
+        <pd:inputBindings>
+            <pfx3:ActivityInput>
+                <data>
+                    <xsl:copy-of select="$_error_JMSDispatcher/pfx2:Fault"/>
+                </data>
+            </pfx3:ActivityInput>
+        </pd:inputBindings>
+    </pd:activity>
+    <pd:activity name="Resolver">
+        <pd:type>com.tibco.pe.core.CallProcessActivity</pd:type>
+        <pd:resourceType>ae.process.subprocess</pd:resourceType>
+        <pd:x>785</pd:x>
+        <pd:y>140</pd:y>
+        <config>
+            <processName>/EnterpriseResources/Resolver/Handler/Resolver.process</processName>
+        </config>
+        <pd:inputBindings>
+            <root>
+                <source>
+                    <xsl:value-of select="tib:render-xml($ParseHTTPPostData/pfx:Envelope/pfx:Body)"/>
+                </source>
+                <xslt>
+                    <xsl:value-of select="ProjectCustom:getReqXSLT($Start/HTTPRequest/Soapaction)"/>
+                </xslt>
+            </root>
+        </pd:inputBindings>
+    </pd:activity>
+    <pd:activity name="Null-2">
+        <pd:type>com.tibco.plugin.timer.NullActivity</pd:type>
+        <pd:resourceType>ae.activities.null</pd:resourceType>
+        <pd:x>920</pd:x>
+        <pd:y>35</pd:y>
+        <config/>
+        <pd:inputBindings/>
+    </pd:activity>
+    <pd:activity name="GetResolver">
+        <pd:type>com.tibco.plugin.java.JavaMethodActivity</pd:type>
+        <pd:resourceType>ae.activities.JavaMethodActivity</pd:resourceType>
+        <pd:x>784</pd:x>
+        <pd:y>35</pd:y>
+        <config>
+            <ConstructDeclaredClass>false</ConstructDeclaredClass>
+            <CacheConstructedClass>false</CacheConstructedClass>
+            <InvokeCleanupMethod>false</InvokeCleanupMethod>
+            <MethodInfo>
+                <classLocation>c:/tibco/bw/5.11/lib/projectdata.jar</classLocation>
+                <className>ProjectData.Local_MedURIInfo</className>
+                <methodName>getResolver</methodName>
+                <methodReturn>java.lang.String</methodReturn>
+                <methodParameter>java.lang.String</methodParameter>
+                <methodParameter>java.lang.String</methodParameter>
+                <methodParameter>java.lang.String</methodParameter>
+            </MethodInfo>
+        </config>
+        <pd:inputBindings>
+            <ns:JavaMethodActivityInput>
+                <MethodParameters>
+                    <Parameter1>
+                        <xsl:value-of select="upper-case($newHeader/pfx2:RqHeader/pfx2:CountryCode)"/>
+                    </Parameter1>
+                    <Parameter2>
+                        <xsl:value-of select="upper-case($_globalVariables/ns2:GlobalVariables/Environment)"/>
+                    </Parameter2>
+                    <Parameter3>
+                        <xsl:value-of select="$Start/HTTPRequest/Soapaction"/>
+                    </Parameter3>
+                </MethodParameters>
+            </ns:JavaMethodActivityInput>
+        </pd:inputBindings>
+    </pd:activity>
+    <pd:activity name="Generate Error">
+        <pd:type>com.tibco.pe.core.GenerateErrorActivity</pd:type>
+        <pd:resourceType>ae.activities.throw</pd:resourceType>
+        <pd:x>657</pd:x>
+        <pd:y>140</pd:y>
+        <config>
+            <faultName>ErrSchema</faultName>
+        </config>
+        <pd:inputBindings>
+            <pfx3:ActivityInput>
+                <data>
+                    <xsl:copy-of select="$_error_Resolver/pfx2:Fault"/>
+                </data>
+            </pfx3:ActivityInput>
+        </pd:inputBindings>
+    </pd:activity>
+    <pd:activity name="ParseResolverBody">
+        <pd:type>com.tibco.plugin.xml.XMLParseActivity</pd:type>
+        <pd:resourceType>ae.activities.XMLParseActivity</pd:resourceType>
+        <pd:x>782</pd:x>
+        <pd:y>244</pd:y>
+        <config>
+            <inputStyle>text</inputStyle>
+            <xsdVersion>default</xsdVersion>
+            <validateOutput>false</validateOutput>
+            <term ref="pfx:Body"/>
+        </config>
+        <pd:inputBindings>
+            <xmlString>
+                <xsl:value-of select="$Resolver/root/Target"/>
+            </xmlString>
+        </pd:inputBindings>
+    </pd:activity>
+    <pd:activity name="RequestMessageResolver">
+        <pd:type>com.tibco.plugin.xml.XMLRendererActivity</pd:type>
+        <pd:resourceType>ae.activities.XMLRendererActivity</pd:resourceType>
+        <pd:x>921</pd:x>
+        <pd:y>141</pd:y>
+        <config>
+            <renderAsText>text</renderAsText>
+            <validateInput>true</validateInput>
+            <textEncoding>UTF-8</textEncoding>
+            <term ref="pfx:Envelope"/>
+        </config>
+        <pd:inputBindings>
+            <pfx:Envelope>
+                <pfx:Header>
+                    <xsl:copy-of select="$newHeader/pfx2:RqHeader"/>
+                </pfx:Header>
+                <xsl:copy-of select="$ParseResolverBody/pfx:Body"/>
+            </pfx:Envelope>
+        </pd:inputBindings>
+    </pd:activity>
+    <pd:activity name="ResponseResolver">
+        <pd:type>com.tibco.pe.core.CallProcessActivity</pd:type>
+        <pd:resourceType>ae.process.subprocess</pd:resourceType>
+        <pd:x>1194</pd:x>
+        <pd:y>121</pd:y>
+        <config>
+            <processName>/EnterpriseResources/Resolver/Handler/ResponseResolver.process</processName>
+        </config>
+        <pd:inputBindings>
+            <root>
+                <source>
+                    <xsl:value-of select="$JMSDispatcher/JMSOutput/Response"/>
+                </source>
+                <xslt>
+                    <xsl:value-of select="ProjectCustom:getResXSLT($Start/HTTPRequest/Soapaction)"/>
+                </xslt>
+            </root>
+        </pd:inputBindings>
+    </pd:activity>
+    <pd:activity name="Generate-Error-1">
+        <pd:type>com.tibco.pe.core.GenerateErrorActivity</pd:type>
+        <pd:resourceType>ae.activities.throw</pd:resourceType>
+        <pd:x>1189</pd:x>
+        <pd:y>241</pd:y>
+        <config>
+            <faultName>ErrSchema</faultName>
+        </config>
+        <pd:inputBindings>
+            <pfx3:ActivityInput>
+                <data>
+                    <xsl:copy-of select="$_error_ResponseResolver/pfx2:Fault"/>
+                </data>
+            </pfx3:ActivityInput>
+        </pd:inputBindings>
+    </pd:activity>
+    <pd:activity name="AuditLogger">
+        <pd:type>com.tibco.pe.core.CallProcessActivity</pd:type>
+        <pd:resourceType>ae.process.subprocess</pd:resourceType>
+        <pd:x>62</pd:x>
+        <pd:y>148</pd:y>
+        <config>
+            <processName>/ProjectLibrary/EnterpriseResources/Processes/Logger/AuditLogger.process</processName>
+        </config>
+        <pd:inputBindings>
+            <root>
+                <ns5:AuditLog>
+                    <ns5:UniqueKey>
+                        <xsl:value-of select="$Generic/HeaderExtra/UniqueID"/>
+                    </ns5:UniqueKey>
+                    <ns5:TimeStamp>
+                        <xsl:value-of select="$Generic/HeaderExtra/TimeStamp"/>
+                    </ns5:TimeStamp>
+                    <ns5:MedReqPayload>
+                        <xsl:value-of select="$Start/HTTPRequest/PostData"/>
+                    </ns5:MedReqPayload>
+                    <ns5:MedResPayload>
+                        <xsl:value-of select="&quot;&quot;"/>
+                    </ns5:MedResPayload>
+                    <ns5:ProcessPayload>
+                        <xsl:value-of select="$Start/HTTPRequest/Soapaction"/>
+                    </ns5:ProcessPayload>
+                </ns5:AuditLog>
+            </root>
+        </pd:inputBindings>
+    </pd:activity>
+    <pd:activity name="AuditLogger-1">
+        <pd:type>com.tibco.pe.core.CallProcessActivity</pd:type>
+        <pd:resourceType>ae.process.subprocess</pd:resourceType>
+        <pd:x>1351</pd:x>
+        <pd:y>37</pd:y>
+        <config>
+            <processName>/ProjectLibrary/EnterpriseResources/Processes/Logger/AuditLogger.process</processName>
+        </config>
+        <pd:inputBindings>
+            <root>
+                <xsl:choose>
+                    <xsl:when test="upper-case($GetResolver/ns3:JavaMethodActivityOutput/MethodReturnValue)=&quot;NO&quot;">
+                        <ns5:AuditLog>
+                            <ns5:UniqueKey>
+                                <xsl:value-of select="$Generic/HeaderExtra/UniqueID"/>
+                            </ns5:UniqueKey>
+                            <ns5:TimeStamp>
+                                <xsl:value-of select="current-dateTime()"/>
+                            </ns5:TimeStamp>
+                            <ns5:MedReqPayload>
+                                <xsl:value-of select="$Start/HTTPRequest/PostData"/>
+                            </ns5:MedReqPayload>
+                            <ns5:MedResPayload>
+                                <xsl:value-of select="$JMSDispatcher/JMSOutput/Response"/>
+                            </ns5:MedResPayload>
+                            <ns5:ProcessPayload>
+                                <xsl:value-of select="$Start/HTTPRequest/Soapaction"/>
+                            </ns5:ProcessPayload>
+                        </ns5:AuditLog>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <ns5:AuditLog>
+                            <ns5:UniqueKey>
+                                <xsl:value-of select="$Generic/HeaderExtra/UniqueID"/>
+                            </ns5:UniqueKey>
+                            <ns5:TimeStamp>
+                                <xsl:value-of select="current-dateTime()"/>
+                            </ns5:TimeStamp>
+                            <ns5:MedReqPayload>
+                                <xsl:value-of select="$Start/HTTPRequest/PostData"/>
+                            </ns5:MedReqPayload>
+                            <ns5:MedResPayload>
+                                <xsl:value-of select="$ResponseResolver/root/Target"/>
+                            </ns5:MedResPayload>
+                            <ns5:ProcessPayload>
+                                <xsl:value-of select="$Start/HTTPRequest/Soapaction"/>
+                            </ns5:ProcessPayload>
+                        </ns5:AuditLog>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </root>
+        </pd:inputBindings>
+    </pd:activity>
+    <pd:transition>
+        <pd:from>Assign</pd:from>
+        <pd:to>AuditLogger</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>ParseHTTPPostData</pd:from>
+        <pd:to>newHeader</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>GetRequestQueue</pd:from>
+        <pd:to>RequestMessage</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>newHeader</pd:from>
+        <pd:to>Authorization</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>Start</pd:from>
+        <pd:to>Assign</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>Authorization</pd:from>
+        <pd:to>GetRequestQueue</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>JMSDispatcher</pd:from>
+        <pd:to>AuditLogger-1</pd:to>
+        <pd:xpathDescription>NonResolver</pd:xpathDescription>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>xpath</pd:conditionType>
+        <pd:xpath>upper-case($GetResolver/ns3:JavaMethodActivityOutput/MethodReturnValue)="NO"</pd:xpath>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>Authorization</pd:from>
+        <pd:to>AuthGenerateError</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>error</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>Authorization</pd:from>
+        <pd:to>Null</pd:to>
+        <pd:xpathDescription>NotAuthorized</pd:xpathDescription>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>xpath</pd:conditionType>
+        <pd:xpath>upper-case($Authorization/ns3:JavaMethodActivityOutput/MethodReturnValue)='NO'</pd:xpath>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>Null</pd:from>
+        <pd:to>AuthGenerateError</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>GetRequestQueue</pd:from>
+        <pd:to>Null-1</pd:to>
+        <pd:xpathDescription>EntryNotFound</pd:xpathDescription>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>xpath</pd:conditionType>
+        <pd:xpath>upper-case($GetRequestQueue/ns3:JavaMethodActivityOutput/MethodReturnValue)='ABC'</pd:xpath>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>GetRequestQueue</pd:from>
+        <pd:to>DestNotFound</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>error</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>Null-1</pd:from>
+        <pd:to>DestNotFound</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>JMSDispatcher</pd:from>
+        <pd:to>AuthGenerateError-1</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>error</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>Null-2</pd:from>
+        <pd:to>JMSDispatcher</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>GetResolver</pd:from>
+        <pd:to>Resolver</pd:to>
+        <pd:xpathDescription>Resolver</pd:xpathDescription>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>otherwise</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>GetResolver</pd:from>
+        <pd:to>Null-2</pd:to>
+        <pd:xpathDescription>NonResolver</pd:xpathDescription>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>xpath</pd:conditionType>
+        <pd:xpath>upper-case($GetResolver/ns3:JavaMethodActivityOutput/MethodReturnValue)="NO"</pd:xpath>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>RequestMessage</pd:from>
+        <pd:to>GetResolver</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>Resolver</pd:from>
+        <pd:to>Generate Error</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-65536</pd:lineColor>
+        <pd:conditionType>error</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>Resolver</pd:from>
+        <pd:to>ParseResolverBody</pd:to>
+        <pd:lineType>Straight</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>ParseResolverBody</pd:from>
+        <pd:to>RequestMessageResolver</pd:to>
+        <pd:lineType>One Bend</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>RequestMessageResolver</pd:from>
+        <pd:to>Null-2</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>JMSDispatcher</pd:from>
+        <pd:to>ResponseResolver</pd:to>
+        <pd:xpathDescription>Resolver</pd:xpathDescription>
+        <pd:lineType>Multiple Bends</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>otherwise</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>ResponseResolver</pd:from>
+        <pd:to>Generate-Error-1</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-52480</pd:lineColor>
+        <pd:conditionType>error</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>ResponseResolver</pd:from>
+        <pd:to>AuditLogger-1</pd:to>
+        <pd:lineType>One Bend</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>AuditLogger</pd:from>
+        <pd:to>ParseHTTPPostData</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>AuditLogger-1</pd:from>
+        <pd:to>End</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+</pd:ProcessDefinition>

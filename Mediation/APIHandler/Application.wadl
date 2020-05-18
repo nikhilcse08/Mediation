@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<application xmlns="http://wadl.dev.java.net/2009/02" name="Application">
+    <resources name="RestService" base="http://localhost:7859">
+        <resource id="Resource1" path="/private/name/trial">
+            <method id="postMethod" name="POST">
+                <request name="Request">
+                    <representation mediaType="application/json"/>
+                </request>
+            </method>
+            <param name="param1" style="query" required="true" default=""/>
+            <param name="param2" style="query" required="true" default=""/>
+        </resource>
+    </resources>
+</application>
